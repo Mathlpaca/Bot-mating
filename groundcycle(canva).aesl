@@ -1,0 +1,65 @@
+<!DOCTYPE aesl-source>
+<network>
+
+
+<!--list of global events-->
+
+
+<!--list of constants-->
+
+
+<!--show keywords state-->
+<keywords flag="true"/>
+
+
+<!--node thymio-II-->
+<node nodeId="42347" name="thymio-II">
+#Ground cycle 0.0
+
+
+#Variables
+
+var state # 0=off, 1=scan, 2=departure, 3=walk, 4=arrival
+var i # loop 
+# button state: 0=off, 1=on
+state=0
+
+#departure procedure
+if state==2 then 
+	
+	
+	
+end
+
+#walk
+onevent prox 
+	if prox.ground.delta[0]>800 or prox.ground.delta[1]>800 then 				state=3	
+
+    		motor.left.target=200 
+   	 	motor.right.target=200 
+    
+    else
+    		
+    		if prox.ground.delta[0]&lt;320 or prox.ground.delta[1]&lt;320 				then state=4
+    		
+    			 timer.period[0]
+    		
+    			motor.left.target=100
+   	 		motor.right.target=100
+   	 		
+   	 		if timer.period[0] then
+   	 			
+   	 			motor.left.target=0
+   	 			motor.right.target=0
+   	 		
+   	 			
+   	 		end
+    			
+    		end
+   	
+    
+    end
+ </node>
+
+
+</network>
