@@ -1,0 +1,74 @@
+<!DOCTYPE aesl-source>
+<network>
+
+
+<!--list of global events-->
+
+
+<!--list of constants-->
+
+
+<!--show keywords state-->
+<keywords flag="true"/>
+
+
+<!--node thymio-II-->
+<node nodeId="42347" name="thymio-II">
+#Ground cycle canva 0.0
+
+
+#Variables
+
+var state # 0=off, 1=departure, 2=walk, 3=arrival
+var i # loop 
+# button state: 0=off, 1=on
+state=0
+
+#State 0 on-off event 
+
+onevent button.center
+
+if button.center==0  then
+	button.center=1
+	state=1
+	
+end
+
+#Subroutines on prox ground
+
+sub ground1
+
+	if prox.ground.delta[0]>230 or prox.ground.delta[1]>230 then
+	
+	motor.left.target=200
+	motor.right.target=200
+			
+	end
+	
+
+sub ground2
+
+	if prox.ground.delta[0]>800 or prox.ground.delta[1]>800  then
+		
+		motor.left.target=200
+		motor.right.target=200
+			
+	end
+	
+	
+sub ground3
+
+	if prox.ground.delta[0]&lt;230 or prox.ground.delta[1]&lt;230 then
+	
+		motor.left.target=200
+		motor.right.target=200
+		
+	
+	end
+
+ 
+
+</node>
+
+
+</network>
