@@ -1,0 +1,79 @@
+<!DOCTYPE aesl-source>
+<network>
+
+
+<!--list of global events-->
+
+
+<!--list of constants-->
+
+
+<!--show keywords state-->
+<keywords flag="true"/>
+
+
+<!--node thymio-II-->
+<node nodeId="42347" name="thymio-II">#Gene scaff
+#Attempt n°3
+#Coding a gene tabular of speed
+
+var gene [5]=[100,100,0,0,0] #Gene n°1
+var myrand_n    #input
+var myrand_m    #input
+var myrand_res  #output
+
+
+myrand_m=220             
+myrand_n=-200            
+
+
+timer.period[0] = 2500
+
+# declaring pseudofunction myrand
+
+sub myrand
+call math.rand(myrand_res)
+myrand_res = abs(myrand_res % (myrand_m+1 - myrand_n)) + myrand_n
+
+
+#lauch timer event
+
+onevent timer0
+motor.left.target=gene[0]
+motor.right.target=gene[1]
+callsub myrand
+gene[0]=myrand_res
+callsub myrand
+gene[1]=myrand_res
+
+
+#launch button center action
+
+onevent button.center
+if button.center==1 then
+motor.left.target=gene[0]
+motor.right.target=gene[1]
+callsub myrand
+gene[0]=myrand_res
+callsub myrand
+gene[1]=myrand_res
+end
+
+
+#launch avoidance mechanism
+
+onevent prox
+if  prox.horizontal[2]>10 then
+motor.left.target=gene[0]
+motor.right.target=gene[1]
+callsub myrand
+gene[0]=myrand_res*-1
+callsub myrand
+gene[1]=myrand_res*-1
+end
+
+
+</node>
+
+
+</network>

@@ -1,0 +1,47 @@
+<!DOCTYPE aesl-source>
+<network>
+
+
+<!--list of global events-->
+
+
+<!--list of constants-->
+
+
+<!--show keywords state-->
+<keywords flag="true"/>
+
+
+<!--node thymio-II-->
+<node nodeId="42347" name="thymio-II">#gene de 8 alèles (les verts)  -> allele = parametre de la fonction d'évolution de la vitesse en fontion du temps
+var gene[8]=[100,1,100,1,0,0,0,0]
+
+#variable temps
+var t=0
+
+#autres variables 
+var result
+var v_left
+var v_right
+
+#echantillonnage du temps : 2500 ms - tout les 2500 ms  l'event timer et appelé
+timer.period[0] = 2500
+
+#calcul paramétrique de la vitesse en fonction du temps et des alleles (left = g0 * cos(t) + g1 *100 ...)
+# il n'ya pas de fct en aseba donc on doit faire un stockage intermediaire (result) des appels cos et sin
+
+sub calc_v_motor
+call math.cos(result, t) 
+ v_left = gene[0] * result + gene[1] * 100
+call math.sin(result, t) 
+ v_right = gene[3] * result + gene[4] * 100
+
+#re-calcul de la vitesse pour chaque delta de temps (tout les 2500ms)
+
+onevent timer0
+t = t +100
+callsub calc_v_motor
+motor.left.target= v_left</node>
+
+
+</network>
