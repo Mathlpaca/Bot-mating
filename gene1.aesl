@@ -1,0 +1,31 @@
+<!DOCTYPE aesl-source>
+<network>
+
+
+<!--list of global events-->
+
+
+<!--list of constants-->
+
+
+<!--show keywords state-->
+<keywords flag="true"/>
+
+
+<!--node thymio-II-->
+<node nodeId="42347" name="thymio-II">#Gene 1 implementation
+
+var motorspeed
+
+sub getmotorspeed
+motorspeed=100
+
+
+
+callsub getmotorspeed
+
+motor.left.target=motorspeed
+motor.right.target=0</node>
+
+
+</network>

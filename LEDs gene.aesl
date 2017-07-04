@@ -1,0 +1,48 @@
+<!DOCTYPE aesl-source>
+<network>
+
+
+<!--list of global events-->
+
+
+<!--list of constants-->
+
+
+<!--show keywords state-->
+<keywords flag="true"/>
+
+
+<!--node thymio-II-->
+<node nodeId="42347" name="thymio-II">#LEDs gene / playing with colors
+
+#this is a training in prep of the main genetic code, the idea is to be able to parameter the color change, and then extrapolate to the speed
+
+var red
+var green
+var blue
+
+sub red						#gene 1
+call leds.top(32,0,0)
+
+sub green					#gene 2
+call leds.top(0,32,0)
+
+sub blue 					#gene 3
+call leds.top(0,0,32)
+
+sub none
+call leds.top(0,0,0)
+
+
+
+
+
+onevent button.center
+if button.center==1 then
+callsub green
+else
+callsub none
+end</node>
+
+
+</network>

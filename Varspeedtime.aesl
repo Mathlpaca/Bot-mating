@@ -1,0 +1,62 @@
+<!DOCTYPE aesl-source>
+<network>
+
+
+<!--list of global events-->
+
+
+<!--list of constants-->
+<constant value="20" name="DELTA"/>
+
+
+<!--show keywords state-->
+<keywords flag="true"/>
+
+
+<!--node thymio-II-->
+<node nodeId="42347" name="thymio-II">
+
+var t
+
+var v1
+var v2
+
+var g1
+var g2
+var g3
+var g4
+
+var sint
+var cost
+
+
+t=0
+v1=100
+v2=20
+
+g1 = 400
+g2 = 900
+g3 = -200
+g4 = 500
+
+timer.period[0] = DELTA
+
+
+sub calc_v1
+call math.sin(sint, t)
+v1 = g1*sint+g2*t
+
+sub calc_v2
+call math.cos(cost, t)
+v1 = g3*cost+g4*t
+
+
+onevent timer0
+  t=t+1
+  callsub calc_v1
+  motor.left.target=v1
+  callsub calc_v2
+  motor.left.target=v2</node>
+
+
+</network>
