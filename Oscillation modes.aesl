@@ -1,0 +1,88 @@
+<!DOCTYPE aesl-source>
+<network>
+
+
+<!--list of global events-->
+
+
+<!--list of constants-->
+
+
+<!--show keywords state-->
+<keywords flag="true"/>
+
+
+<!--node thymio-II-->
+<node nodeId="42347" name="thymio-II">#Oscillation mode of variation of speed
+#When oscillating, there are 4 oscillation modes:
+
+var gene[5]=[100,1,100,1,0]
+# g[number of space]=[leftbase,rightbase,varleft,varright]
+
+
+var t=0
+var result 
+
+var myrand_n    #input
+var myrand_m    #input
+var myrand_res  #output
+
+var v_left
+var v_right
+
+myrand_m=220             
+myrand_n=-200 
+
+timer.period[0] = 2500
+
+
+sub myrand
+call math.rand(myrand_res)
+myrand_res = abs(myrand_res % (myrand_m+1 - myrand_n)) + myrand_n
+
+sub calc_v_motor
+call math.cos(result, t) 
+v_left = gene[0] * result + gene[1] * 100
+call math.sin(result, t) 
+v_right = gene[3] * result + gene[4] * 100
+
+onevent timer0
+t=t+100
+callsub calc_v_motor
+motor.left.target=v_left
+callsub calc_v_motor
+motor.right.target=v_right
+
+
+#1 No variation, constant speed
+
+#onevent timer0
+#motor.left.target=gene[0]
+#motor.right.target=gene[0]
+#callsub myrand
+#gene[0]=myrand_res
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</node>
+
+
+</network>

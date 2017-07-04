@@ -1,0 +1,77 @@
+<!DOCTYPE aesl-source>
+<network>
+
+
+<!--list of global events-->
+
+
+<!--list of constants-->
+
+
+<!--show keywords state-->
+<keywords flag="true"/>
+
+
+<!--node thymio-II-->
+<node nodeId="42347" name="thymio-II">#Move Gene n°1 Left motor
+#Speed definition
+
+var gene [4]=[100,0,0,0] #Gene n°1 array
+var myrand_n    #input
+var myrand_m    #input
+var myrand_res  #output
+
+myrand_m=220             
+myrand_n=-200 
+
+#Declaring pseudofunction myrand
+#It generates a random value 
+
+sub myrand
+call math.rand(myrand_res)
+myrand_res = abs(myrand_res % (myrand_m+1 - myrand_n)) + myrand_n
+
+
+#Every time the button is activated, the speed.target value changes
+
+onevent button.center
+if button.center==1 then
+motor.left.target=gene[0]
+callsub myrand
+gene[0]=myrand_res
+callsub myrand
+gene[1]=myrand_res
+end
+
+
+#Speed variation V(t), every time the timer resets, the speed value changes 
+
+onevent timer0
+motor.left.target=gene[0]
+callsub myrand
+gene[0]=myrand_res
+callsub myrand
+gene[1]=myrand_res
+
+
+#Avoidance event 
+
+onevent prox
+if  prox.horizontal[2]>10 then
+motor.left.target=gene[0]
+callsub myrand
+gene[0]=myrand_res*-1
+callsub myrand
+gene[1]=myrand_res*-1
+end
+
+
+
+
+
+
+
+</node>
+
+
+</network>
