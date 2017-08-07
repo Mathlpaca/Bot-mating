@@ -1,0 +1,332 @@
+<!DOCTYPE aesl-source>
+<network>
+
+
+<!--list of global events-->
+
+
+<!--list of constants-->
+<constant value="128" name="ID_CONS"/>
+<constant value="450" name="GREY_REF"/>
+<constant value="130" name="SPEED_LOW"/>
+<constant value="150" name="SPEED_MED"/>
+<constant value="416" name="SPEED_HIGH"/>
+<constant value="400" name="GREY_THRESH"/>
+<constant value="1000" name="OBS_PROX_THRESH"/>
+<constant value="3000" name="OBS_PROX_THRESH_MAX"/>
+<constant value="1" name="S_ROAD"/>
+<constant value="2" name="S_READ"/>
+<constant value="3" name="S_ACTION"/>
+<constant value="4" name="S_EXIT"/>
+<constant value="5" name="S_CONTINUE"/>
+<constant value="6" name="S_BACK"/>
+<constant value="1" name="YES"/>
+<constant value="0" name="NO"/>
+<constant value="7" name="S_RECEPT"/>
+<constant value="256" name="ID_PROD"/>
+<constant value="0" name="S_STOP"/>
+
+
+<!--show keywords state-->
+<keywords flag="true"/>
+
+
+<!--node thymio-II-->
+<node nodeId="1" name="thymio-II">#*--------------------------------------------------------------------------------
+				LEARN CONCURRENCY WITH THYMIO: COMMUNICATION
+				
+	title: rendezvous_consumer.aesl
+	last modification date: December 2015
+	author: Coline LUGAZ
+	description: source code for the example of the rendezvous communication where 							 Thymios are transmitting colours.
+				 must be used with the coresponding rendezvous_producer.aesl file
+
+---------------------------------------------------------------------------------*#
+
+
+
+var state = S_ROAD
+var oldState = S_ROAD
+
+#speed variables
+var speedType = SPEED_LOW
+var savedSpeed = SPEED_LOW
+var savedSpeedInters = SPEED_LOW
+var addSpeedLeft = 0
+var addSpeedRight = 0
+
+#line followig variables
+var controlFactor = 1
+var intensityDiff = 0
+var intensityObst = 0
+var intensityDiffObst = 0
+var whiteThreshold = GREY_REF+200
+var proxInteriorFactor = 1
+
+#countervariables
+var counter = 0
+var counterContinue = 0
+var counterStop = 0
+var counterRead = 0
+var code = 0
+var interval = 0
+var readLocation = 0
+
+var timerON = 0
+var incrementCounter=1
+
+#variables for channels
+var ready = YES
+var counttimer1 =0
+var countsend
+var red
+var green
+var blue
+var i
+var ready_prod
+var id_thymio
+
+##########
+
+#Turn off some firmware behaviour
+#call leds.prox.h(0,0,0,0,0,0,0,0)
+#call leds.prox.v(0,0)
+#call leds.temperature(0,0)
+call prox.comm.enable(1)
+
+		
+#Start the robot in a parking before the barcode		
+onevent button.forward
+	if  button.forward == 1 then
+		speedType = SPEED_LOW
+		state = S_ROAD
+		counter = 60
+		ready = YES
+		red= 0
+		green = 0
+		blue = 0
+		counttimer1=0
+	end
+		
+#Stop the robot
+onevent button.center
+	if  button.center == 1 then
+		motor.left.target = 0
+		motor.right.target = 0
+		state = S_STOP
+	end
+	
+#Main event where all the computation is done
+onevent prox
+#if the robot is not stopped or across another road, it follows the line
+	if  state != S_STOP and state != S_CONTINUE then
+		intensityDiff = prox.ground.delta[0]-GREY_REF
+		#The robot is given a reference mean value. Its speed is controlled to stay as close as possible
+		#to this value with a P controller. The gain (dividing factor) depends on the state.
+		if  state == S_ROAD or state == S_BACK then
+			controlFactor = 3
+		elseif  state == S_ACTION or state == S_EXIT or state == S_RECEPT then
+			controlFactor = 2
+		elseif  state == S_READ then
+			controlFactor = 6
+		end
+		addSpeedLeft = intensityDiff/controlFactor
+		addSpeedRight = -intensityDiff/controlFactor	
+				
+		#Obstacle avoidance
+		#In a crossroad, interior proximity sensor([1]) desactivated
+		if  (prox.horizontal[1] > proxInteriorFactor*OBS_PROX_THRESH or prox.horizontal[2] > OBS_PROX_THRESH or 
+				prox.horizontal[3] > OBS_PROX_THRESH) and (state == S_ROAD or state == S_ACTION or state == S_EXIT)
+				 then
+			#Collect the maximum intensity detected
+			call math.max(intensityObst,prox.horizontal[2], prox.horizontal[3])
+			call math.max(intensityObst,intensityObst, prox.horizontal[1]/proxInteriorFactor)
+			intensityDiffObst = intensityObst - OBS_PROX_THRESH
+			#Reduce the speed proportionally to the intensity.
+			if intensityDiffObst >= 0 then
+				motor.left.target = speedType+addSpeedLeft-intensityDiffObst/(75/(1+speedType/SPEED_LOW))
+				motor.right.target = speedType+addSpeedRight-intensityDiffObst/(75/(1+speedType/SPEED_LOW))
+			end
+			#Above the threshold, stop
+			if intensityObst > OBS_PROX_THRESH_MAX then
+				motor.left.target = 0
+				motor.right.target = 0
+			end
+		#Obstacle avoidance when going backward. If there is something, stop (no adaptation of speed
+		elseif  (prox.horizontal[5] > OBS_PROX_THRESH_MAX or prox.horizontal[6] > OBS_PROX_THRESH_MAX) and state ==	S_BACK then
+				motor.left.target = 0
+				motor.right.target = 0
+		#No obstacle avoidance
+		else
+			motor.left.target = speedType + addSpeedLeft
+			motor.right.target = speedType + addSpeedRight
+			#If there is a too big difference, turn on itself (only on white part of gradient)
+			if abs intensityDiff > 300  then
+				motor.left.target = intensityDiff/4
+				motor.right.target = -intensityDiff/4
+			end
+		end
+	end
+	
+	#Reading synchro bit + security to be sure not to read the black side of the road
+	if (state == S_ROAD) and  prox.ground.delta[1] &lt; GREY_THRESH and prox.ground.delta[0] &lt; whiteThreshold then
+		#If there is already someone reading the barcode, go backward.
+		if  (prox.horizontal[1] > OBS_PROX_THRESH or prox.horizontal[2] > OBS_PROX_THRESH or prox.horizontal[3] > OBS_PROX_THRESH) then
+				oldState = state
+				state = S_BACK
+				timer.period[0] = 1200
+				speedType = -SPEED_LOW
+				timerON = 1
+		#Go to the reading state.
+		else
+			oldState = state
+			state = S_READ
+			counterRead = 0
+			code = 0
+		end
+	end
+	
+	#Reading barcode
+	if state == S_READ then
+		#Interval depending on the speed
+		interval = 2*SPEED_HIGH/speedType #count between two readings
+		counterRead++
+		#First time wait 1,5 interval to ben in the middle of the next bit
+		if  counterRead == 1+(3*interval-1)/2 then
+			if prox.ground.delta[1] &lt; GREY_THRESH then
+				code +=1
+			end
+		elseif  counterRead == 1+(5*interval-1)/2 then
+			if prox.ground.delta[1] &lt; GREY_THRESH then
+				code +=2
+			end
+		elseif  counterRead == 1+(7*interval-1)/2 then
+			if prox.ground.delta[1] &lt; GREY_THRESH then
+				code +=4
+			end
+		#Wait 1 additional interval to be sure to be across the barcode
+		elseif counterRead == 1+(9*interval-1)/2 then
+			state = oldState		
+			#Change state corresponding to the code read
+			if  state == S_ROAD then
+				if code == 4 then
+					state = S_ACTION
+				end
+			end
+		end
+	end
+	
+	#Decision making to enter the communication area
+	if  state == S_ACTION then
+		counter =0
+		if  ready ==YES then
+			state = S_RECEPT
+			countsend = 0
+		else
+			state = S_CONTINUE
+		end
+	end
+	
+	#Communication protocole
+	if state == S_RECEPT then
+		countsend++
+		if  countsend >60 then
+			prox.comm.tx= ID_CONS + ready*8
+			motor.left.target = 0
+			motor.right.target = 0
+			#reception of a message
+			if (prox.comm.rx &amp; 0b00000001000)>>3 == 1  and (prox.comm.rx &amp; 0b1110000000) == ID_PROD then 
+				#stocking and displaying the colour received
+				red = (prox.comm.rx &amp; 0b00000000100)>>2
+				green = (prox.comm.rx &amp; 0b00000000010)>>1
+				blue = (prox.comm.rx &amp; 0b00000000001)
+				call leds.top(red*32,green*32,blue*32)
+				#transmiting aknowledgement of receipt
+				prox.comm.tx= ID_CONS + ready*8 + red*4 + green*2 + blue
+				#go to road state
+				call math.rand(i)
+				speedType = SPEED_LOW + (i%30)
+				timer.period[1]=20
+				ready = NO
+				state = S_ROAD
+			end
+		end
+	end
+	
+
+	#Cross a road or cross a part without gradient
+	if state == S_CONTINUE then
+		counter++
+		motor.left.target =  speedType*85/100
+		motor.right.target = speedType
+		#Obstacle avoidance. If there is something, stop counter and stop moving
+		#In a crossroad, interior proximity sensor ([7]) desactivated
+		if (prox.horizontal[1] > proxInteriorFactor*OBS_PROX_THRESH or prox.horizontal[2] > OBS_PROX_THRESH or 
+				prox.horizontal[3] > OBS_PROX_THRESH)  then
+				savedSpeedInters = speedType
+				motor.left.target = 0
+				motor.right.target = 0
+				counter--
+				counterStop = 1
+		#No more obstacles
+		#Interior proximity sensor taken into account unless crossroad
+		elseif  counterStop == 1 and (prox.horizontal[1] &lt; OBS_PROX_THRESH/proxInteriorFactor and prox.horizontal[2] &lt; OBS_PROX_THRESH 
+		and prox.horizontal[3] &lt; OBS_PROX_THRESH) then
+			counterStop = 0
+			speedType = savedSpeedInters
+		end
+		#Goes back to action state
+		if  counter > 35  then
+			state = S_ROAD
+		end
+	end
+	
+	#LEDs to indicate the color	
+	call leds.top(red*32, green*32, blue*32)
+	
+	#LEDs to indicate the barcode
+	if  code == 1 then
+	call leds.circle(1,0,0,0,0,0,0,0)
+	elseif  code == 2 then
+	call leds.circle(1,1,0,0,0,0,0,0)
+	elseif  code == 3 then
+	call leds.circle(1,1,1,0,0,0,0,0)
+	elseif code == 4 then
+	call leds.circle(1,1,1,1,0,0,0,0)
+	elseif  code == 5 then
+	call leds.circle(1,1,1,1,1,0,0,0)
+	elseif  code == 6 then
+	call leds.circle(1,1,1,1,1,1,0,0)
+	elseif code == 7 then
+	call leds.circle(1,1,1,1,1,1,1,0)
+	elseif  code == 0 then
+	call leds.circle(0,0,0,0,0,0,0,0)
+	end
+	
+	
+#Timer used to go backward
+onevent timer0
+	if timerON == YES  then
+		speedType = SPEED_LOW
+		state = oldState
+		timerON = NO
+	end
+
+#Timer used to change the ready and color variable
+onevent timer1
+	if  ready == NO then
+		counttimer1 ++
+		if  counttimer1>1000 then
+			ready = YES
+			red = 0
+			green = 0
+			blue =0			
+			call leds.top(0,0,0)
+			counttimer1 = 0
+		end
+	end
+	
+</node>
+
+
+</network>
