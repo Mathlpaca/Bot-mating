@@ -1,0 +1,180 @@
+<!DOCTYPE aesl-source>
+<network>
+
+
+<!--list of global events-->
+
+
+<!--list of constants-->
+
+
+<!--show keywords state-->
+<keywords flag="true"/>
+
+
+<!--node thymio-II-->
+<node nodeId="46479" name="thymio-II">#Commtry POC 2.0
+#Attempt of use of the concurrent communication of colors between two bots
+#Using the genescaff code WITH stochastic behavior and avoidance mechanism
+
+
+var gene [5]=[100,100,0,0,0] #Gene n°1
+var myrand_n    #input
+var myrand_m    #input
+var myrand_res  #output
+var tx_state  #internal state comm received
+
+tx_state=0
+myrand_m=220             
+myrand_n=-200            
+
+
+timer.period[0] = 2500
+
+# declaring pseudofunction myrand
+
+sub myrand
+call math.rand(myrand_res)
+myrand_res = abs(myrand_res % (myrand_m+1 - myrand_n)) + myrand_n
+
+
+#lauch timer event
+
+onevent timer0
+motor.left.target=gene[0]
+motor.right.target=gene[1]
+callsub myrand
+gene[0]=myrand_res
+callsub myrand
+gene[1]=myrand_res
+
+
+
+#On-setting of the prox.comm function and reset of motors
+
+onevent button.forward
+
+if button.forward==1 then
+ call leds.top(32,32,32)
+ 	motor.left.target=gene[0]
+ 	motor.right.target=gene[1]
+end
+
+
+onevent prox.comm		#reception 
+   if prox.comm.rx==1 then
+    call leds.top(0, 32,0)
+   end
+	
+onevent prox
+  if  prox.horizontal[1]>10 or prox.horizontal[2]>10 or prox.horizontal[3]>10 or prox.horizontal[4]>10 or prox.horizontal[5]>10  then
+    motor.left.target=gene[0]
+    motor.right.target=gene[1]
+    prox.comm.tx=1
+    tx_state=1
+    callsub myrand
+    gene[0]=myrand_res*-1
+    callsub myrand
+    gene[1]=myrand_res*-1
+    
+    call prox.comm.enable(1)
+    prox.comm.tx=1 
+    
+   end
+  if prox.horizontal[2]&lt;20 then
+   	call prox.comm.enable(0)
+    
+   end
+ 
+onevent button.center
+  tx_state=0
+  motor.left.target=0
+  motor.right.target=0
+  call leds.top(0,0,0)
+  call prox.comm.enable(0)</node>
+
+
+<!--node thymio-II-->
+<node nodeId="42347" name="thymio-II">#Commtry POC 2.0
+#Attempt of use of the concurrent communication of colors between two bots
+#Using the genescaff code WITH stochastic behavior and avoidance mechanism
+
+
+var gene [5]=[100,100,0,0,0] #Gene n°1
+var myrand_n    #input
+var myrand_m    #input
+var myrand_res  #output
+var tx_state  #internal state comm received
+
+tx_state=0
+myrand_m=220             
+myrand_n=-200            
+
+
+timer.period[0] = 2500
+
+# declaring pseudofunction myrand
+
+sub myrand
+call math.rand(myrand_res)
+myrand_res = abs(myrand_res % (myrand_m+1 - myrand_n)) + myrand_n
+
+
+#lauch timer event
+
+onevent timer0
+motor.left.target=gene[0]
+motor.right.target=gene[1]
+callsub myrand
+gene[0]=myrand_res
+callsub myrand
+gene[1]=myrand_res
+
+
+#On-setting of LEDs function and reset of motors
+
+onevent button.forward
+
+if button.forward==1 then
+ call leds.top(32,32,32)
+ callsub myrand 
+ 	motor.left.target=gene[0]
+ callsub myrand 
+ 	motor.right.target=gene[1]
+end
+
+
+onevent prox.comm		#reception 
+   if prox.comm.rx==1 then
+    call leds.top(0, 32,0)
+   end
+	
+onevent prox
+  if prox.horizontal[2]>10   then
+    motor.left.target=gene[0]
+    motor.right.target=gene[1]
+    prox.comm.tx=1
+    tx_state=1
+    callsub myrand
+    gene[0]=myrand_res*-1
+    callsub myrand
+    gene[1]=myrand_res*-1
+    
+    call prox.comm.enable(1)
+    prox.comm.tx=1 
+    
+   end
+  if prox.horizontal[2]&lt;20 then
+   	call prox.comm.enable(0)
+    
+   end
+ 
+onevent button.center
+  tx_state=0
+  motor.left.target=0
+  motor.right.target=0
+  call leds.top(0,0,0)
+  call prox.comm.enable(0)</node>
+
+
+</network>
