@@ -1,0 +1,32 @@
+<!DOCTYPE aesl-source>
+<network>
+
+
+<!--list of global events-->
+
+
+<!--list of constants-->
+
+
+<!--show keywords state-->
+<keywords flag="true"/>
+
+
+<!--node thymio-II-->
+<node nodeId="42347" name="thymio-II">#State engine "Mating path"
+#In order to communicate via the R captor, the two individuals need to be aligned, this code implements the three differents states: Road (default), Align and Mate.
+
+var state # 1=Road, 2=Align, 3=Mate 
+
+state=1 
+
+if  state==1 then
+
+	#Insert the genetic code here 
+end
+
+
+</node>
+
+
+</network>

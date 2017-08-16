@@ -13,9 +13,10 @@
 
 
 <!--node thymio-II-->
-<node nodeId="42347" name="thymio-II">#Commtry POC 2.0
+<node nodeId="42347" name="thymio-II">#Commtry POC 2.1
 #Attempt of use of the concurrent communication of colors between two bots
 #Using the genescaff code WITH stochastic behavior and avoidance mechanism
+#Addition of a loop sequence verifying the value of horizontal receptors 0-6
 
 
 var gene [5]=[100,100,0,0,0] #Gene n°1
@@ -23,6 +24,9 @@ var myrand_n    #input
 var myrand_m    #input
 var myrand_res  #output
 var tx_state  #internal state comm received
+var i
+var flag
+
 
 tx_state=0
 myrand_m=220             
@@ -49,56 +53,59 @@ callsub myrand
 gene[1]=myrand_res
 
 
-#On-setting of LEDs function and reset of motors
-
-onevent button.forward
-
-if button.forward==1 then
- call leds.top(32,32,32)
- callsub myrand 
- 	motor.left.target=gene[0]
- callsub myrand 
- 	motor.right.target=gene[1]
-end
-
 
 onevent prox.comm		#reception 
    if prox.comm.rx==1 then
     call leds.top(0, 32,0)
    end
+   
 	
 onevent prox
-  if prox.horizontal[2]>10   then
-    motor.left.target=gene[0]
-    motor.right.target=gene[1]
-    prox.comm.tx=1
-    tx_state=1
-    callsub myrand
-    gene[0]=myrand_res*-1
-    callsub myrand
-    gene[1]=myrand_res*-1
+	
+	flag=0
+	for i in 0:6 do 
+		if prox.horizontal[i]>10 then
+		flag=1
+		end
+	end
+
+	if flag==1  then
+    		motor.left.target=gene[0]
+    		motor.right.target=gene[1]
+    		prox.comm.tx=1
+    		tx_state=1
+    		callsub myrand
+    		gene[0]=myrand_res*-1
+    		callsub myrand
+    		gene[1]=myrand_res*-1
     
-    call prox.comm.enable(1)
-    prox.comm.tx=1 
+    		call prox.comm.enable(1)
+    		prox.comm.tx=1 
+    end
     
-   end
-  if prox.horizontal[2]&lt;20 then
-   	call prox.comm.enable(0)
-    
-   end
+  	if prox.horizontal[2]&lt;20 then
+   		call prox.comm.enable(0)
+   		
+   		call leds.top(32,32,32)		#Reset motors and comm 
+ 		callsub myrand 
+ 			motor.left.target=gene[0]
+ 		callsub myrand 
+ 			motor.right.target=gene[1]
+    end
+  	
+  
+  
  
-onevent button.center
-  tx_state=0
-  motor.left.target=0
-  motor.right.target=0
-  call leds.top(0,0,0)
-  call prox.comm.enable(0)</node>
+
+ 
+</node>
 
 
 <!--node thymio-II-->
-<node nodeId="46479" name="thymio-II">#Commtry POC 2.0
+<node nodeId="46479" name="thymio-II">#Commtry POC 2.1
 #Attempt of use of the concurrent communication of colors between two bots
 #Using the genescaff code WITH stochastic behavior and avoidance mechanism
+#Addition of a loop sequence verifying the value of horizontal receptors 0-6
 
 
 var gene [5]=[100,100,0,0,0] #Gene n°1
@@ -106,7 +113,9 @@ var myrand_n    #input
 var myrand_m    #input
 var myrand_res  #output
 var tx_state  #internal state comm received
-var prox_flag
+var i
+var flag
+
 
 tx_state=0
 myrand_m=220             
@@ -134,50 +143,45 @@ gene[1]=myrand_res
 
 
 
-#On-setting of the prox.comm function and reset of motors
-
-onevent button.forward
-
-if button.forward==1 then
- call leds.top(32,32,32)
- 	motor.left.target=gene[0]
- 	motor.right.target=gene[1]
-end
-
-
 onevent prox.comm		#reception 
    if prox.comm.rx==1 then
     call leds.top(0, 32,0)
    end
+   
 	
 onevent prox
+	
+	flag=0
+	for i in 0:6 do 
+		if prox.horizontal[i]>10 then
+		flag=1
+		end
+	end
 
-  if  prox.horizontal[1]>10 then 
-  or prox.horizontal[2]>10 or prox.horizontal[3]>10 or prox.horizontal[4]>10 or prox.horizontal[5]>10  then
-    motor.left.target=gene[0]
-    motor.right.target=gene[1]
-    prox.comm.tx=1
-    tx_state=1
-    callsub myrand
-    gene[0]=myrand_res*-1
-    callsub myrand
-    gene[1]=myrand_res*-1
+	if flag==1  then
+    		motor.left.target=gene[0]
+    		motor.right.target=gene[1]
+    		prox.comm.tx=1
+    		tx_state=1
+    		callsub myrand
+    		gene[0]=myrand_res*-1
+    		callsub myrand
+    		gene[1]=myrand_res*-1
     
-    call prox.comm.enable(1)
-    prox.comm.tx=1 
+    		call prox.comm.enable(1)
+    		prox.comm.tx=1 
+    end
     
-   end
-  if prox.horizontal[2]&lt;20 then
-   	call prox.comm.enable(0)
-    
-   end
- 
-onevent button.center
-  tx_state=0
-  motor.left.target=0
-  motor.right.target=0
-  call leds.top(0,0,0)
-  call prox.comm.enable(0)</node>
+  	if prox.horizontal[2]&lt;20 then
+   		call prox.comm.enable(0)
+   		
+   		call leds.top(32,32,32)		#Reset motors and comm 
+ 		callsub myrand 
+ 			motor.left.target=gene[0]
+ 		callsub myrand 
+ 			motor.right.target=gene[1]
+    end
+  	</node>
 
 
 </network>
