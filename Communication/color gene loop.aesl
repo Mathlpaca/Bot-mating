@@ -1,0 +1,205 @@
+<!DOCTYPE aesl-source>
+<network>
+
+
+<!--list of global events-->
+
+
+<!--list of constants-->
+
+
+<!--show keywords state-->
+<keywords flag="true"/>
+
+
+<!--node thymio-II-->
+<node nodeId="46479" name="thymio-II">#Color gene selection 2.0
+#Using the genescaff code WITH stochastic behavior and avoidance mechanism
+#Addition of a loop sequence verifying the value of horizontal receptors 0-6
+
+
+var gene [5]=[100,100,0,0,0] #Gene n°1
+var myrand_n    #input
+var myrand_m    #input
+var myrand_res  #output
+var tx_state  #internal state comm received
+var i
+var flag
+var locus
+
+var R [7]=[0,32,0,0,32,32,0]
+var G [7]=[0,0,32,0,32,32,32]
+var B [7]=[0,0,0,32,32,0,32]
+
+
+tx_state=0
+myrand_m=220             
+myrand_n=-200            
+
+
+timer.period[0] = 2500
+
+# declaring pseudofunction myrand
+
+sub myrand
+call math.rand(myrand_res)
+myrand_res = abs(myrand_res % (myrand_m+1 - myrand_n)) + myrand_n
+
+
+#lauch timer event
+
+onevent timer0
+motor.left.target=gene[0]
+motor.right.target=gene[1]
+callsub myrand
+gene[0]=myrand_res
+callsub myrand
+gene[1]=myrand_res
+
+locus=0
+
+onevent prox.comm
+
+   if locus>7 then
+	  locus=0
+   end
+   
+   if prox.comm.rx==locus then		#reception
+    call leds.top(R[locus],G[locus],B[locus])
+    	locus=locus+1
+   end
+   
+
+ 	
+	
+onevent prox
+	
+	flag=0
+	for i in 0:6 do 
+		if prox.horizontal[i]>10 then
+		flag=1
+		end
+	end
+
+	if flag==1  then
+    		motor.left.target=gene[0]
+    		motor.right.target=gene[1]
+    		prox.comm.tx=1
+    		tx_state=1
+    		callsub myrand
+    		gene[0]=myrand_res*-1
+    		callsub myrand
+    		gene[1]=myrand_res*-1
+    
+    		call prox.comm.enable(1)
+    		prox.comm.tx=locus 
+    end
+    
+  	if prox.horizontal[2]>20 then
+   		call prox.comm.enable(0)
+   		
+   								
+ 		callsub myrand 
+ 			motor.left.target=gene[0]
+ 		callsub myrand 
+ 			motor.right.target=gene[1]
+    end
+  	</node>
+
+
+<!--node thymio-II-->
+<node nodeId="42347" name="thymio-II">#Color gene selection 2.0
+#Using the genescaff code WITH stochastic behavior and avoidance mechanism
+#Addition of a loop sequence verifying the value of horizontal receptors 0-6
+
+
+var gene [5]=[100,100,0,0,0] #Gene n°1
+var myrand_n    #input
+var myrand_m    #input
+var myrand_res  #output
+var tx_state  #internal state comm received
+var i
+var flag
+var locus
+
+var R [7]=[32,32,0,0,32,32,0]
+var G [7]=[32,0,32,0,0,32,32]
+var B [7]=[32,0,0,32,32,0,32]
+
+
+tx_state=0
+myrand_m=220             
+myrand_n=-200            
+
+
+timer.period[0] = 2500
+
+# declaring pseudofunction myrand
+
+sub myrand
+call math.rand(myrand_res)
+myrand_res = abs(myrand_res % (myrand_m+1 - myrand_n)) + myrand_n
+
+
+#lauch timer event
+
+onevent timer0
+motor.left.target=gene[0]
+motor.right.target=gene[1]
+callsub myrand
+gene[0]=myrand_res
+callsub myrand
+gene[1]=myrand_res
+
+locus=0
+
+onevent prox.comm
+
+   if locus>7 then
+	  locus=0
+   end
+   
+   if prox.comm.rx==locus then		#reception
+    call leds.top(R[locus],G[locus],B[locus])
+    	locus=locus+1
+   end
+   
+
+ 	
+	
+onevent prox
+	
+	flag=0
+	for i in 0:6 do 
+		if prox.horizontal[i]>10 then
+		flag=1
+		end
+	end
+
+	if flag==1  then
+    		motor.left.target=gene[0]
+    		motor.right.target=gene[1]
+    		prox.comm.tx=1
+    		tx_state=1
+    		callsub myrand
+    		gene[0]=myrand_res*-1
+    		callsub myrand
+    		gene[1]=myrand_res*-1
+    
+    		call prox.comm.enable(1)
+    		prox.comm.tx=locus 
+    end
+    
+  	if prox.horizontal[2]>20 then
+   		call prox.comm.enable(0)
+   		
+   								
+ 		callsub myrand 
+ 			motor.left.target=gene[0]
+ 		callsub myrand 
+ 			motor.right.target=gene[1]
+    end
+  	</node>
+
+
+</network>
