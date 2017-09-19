@@ -1,0 +1,219 @@
+<!DOCTYPE aesl-source>
+<network>
+
+
+<!--list of global events-->
+
+
+<!--list of constants-->
+
+
+<!--show keywords state-->
+<keywords flag="true"/>
+
+
+<!--node thymio-II-->
+<node nodeId="46479" name="thymio-II">#Color gene selection 2.1
+#Using the genescaff code WITH stochastic behavior and avoidance mechanism
+#Addition of a loop sequence verifying the value of horizontal receptors 0-6
+#Addition of a refractory period between two round of mating
+
+
+var gene [5]=[100,100,0,0,0] #Gene n°1
+var myrand_n    #input
+var myrand_m    #input
+var myrand_res  #output
+var myrand_loc
+var tx_state  #internal state comm received
+var i
+var j
+var flag
+var locus=0
+var freeze=1
+
+
+var R [7]=[32,32,0,0,32,32,0]
+var G [7]=[0,0,32,0,32,32,32]
+var B [7]=[32,0,0,32,32,0,32]
+
+
+myrand_m=300             
+myrand_n=0            
+
+
+timer.period[0] = 4500
+
+#utility functions
+
+sub myrand
+	call math.rand(myrand_res)
+	myrand_res = abs(myrand_res % (myrand_m+1 - myrand_n)) + myrand_n
+
+sub locusrand
+	call math.rand(myrand_loc)
+	myrand_loc = abs(myrand_loc % 7) 
+
+sub internalGeneMutation
+	callsub myrand
+	gene[0]=myrand_res
+	callsub myrand
+	gene[1]=myrand_res
+	motor.left.target=gene[0]
+	motor.right.target=gene[1]
+
+sub externalGeneMutation
+   	locus=prox.comm.rx	#reception
+    	call leds.top(R[locus],G[locus],B[locus])
+
+
+#launch timer event
+onevent timer0
+#each period genes mutation is performed, movement is changed
+	callsub internalGeneMutation
+	callsub locusrand
+	locus = myrand_loc
+ 	call leds.top(R[locus],G[locus],B[locus])
+
+
+#communication sensor event
+onevent prox.comm	
+#Mating	
+	callsub externalGeneMutation
+	
+ 	
+#proximity sensor event	
+onevent prox
+	
+	#01 test when proximity value of a sensor lower than 2cm 
+	flag=0
+	j=0
+	for i in 0:6 do 
+		if prox.horizontal[i]>4000 then
+			j=i
+			flag=1
+		end
+	end
+
+	#02 proximity triggered, go backward or forward depend on sensor, enable comm 
+	if flag==1  then	 
+	 call prox.comm.enable(1)
+    	 prox.comm.tx=locus 
+	 if  j&lt;5 then
+	 #rear sensor
+	 	motor.left.target=-100
+ 		motor.right.target=-100    
+	 else
+	 	motor.left.target=100
+ 		motor.right.target=100 
+	 end	
+    end
+    
+  	if prox.horizontal[j]&lt;2000 and prox.horizontal[j]>1000 then
+   		call prox.comm.enable(0)  								
+		callsub internalGeneMutation
+    end</node>
+
+
+<!--node thymio-II-->
+<node nodeId="42347" name="thymio-II">#Color gene selection 2.1
+#Using the genescaff code WITH stochastic behavior and avoidance mechanism
+#Addition of a loop sequence verifying the value of horizontal receptors 0-6
+#Addition of a refractory period between two round of mating
+
+
+var gene [5]=[100,100,0,0,0] #Gene n°1
+var myrand_n    #input
+var myrand_m    #input
+var myrand_res  #output
+var myrand_loc
+var tx_state  #internal state comm received
+var i
+var j
+var flag
+var locus=0
+var freeze=1
+
+
+var R [7]=[32,32,0,0,32,32,0]
+var G [7]=[0,0,32,0,32,32,32]
+var B [7]=[32,0,0,32,32,0,32]
+
+
+myrand_m=300             
+myrand_n=0            
+
+
+timer.period[0] = 4500
+
+#utility functions
+
+sub myrand
+	call math.rand(myrand_res)
+	myrand_res = abs(myrand_res % (myrand_m+1 - myrand_n)) + myrand_n
+
+sub locusrand
+	call math.rand(myrand_loc)
+	myrand_loc = abs(myrand_loc % 7) 
+
+sub internalGeneMutation
+	callsub myrand
+	gene[0]=myrand_res
+	callsub myrand
+	gene[1]=myrand_res
+	motor.left.target=gene[0]
+	motor.right.target=gene[1]
+
+sub externalGeneMutation
+   	locus=prox.comm.rx	#reception
+    	call leds.top(R[locus],G[locus],B[locus])
+
+
+#launch timer event
+onevent timer0
+#each period genes mutation is performed, movement is changed
+	callsub internalGeneMutation
+	callsub locusrand
+	locus = myrand_loc
+ 	call leds.top(R[locus],G[locus],B[locus])
+
+
+#communication sensor event
+onevent prox.comm	
+#Mating	
+	callsub externalGeneMutation
+	
+ 	
+#proximity sensor event	
+onevent prox
+	
+	#01 test when proximity value of a sensor lower than 2cm 
+	flag=0
+	j=0
+	for i in 0:6 do 
+		if prox.horizontal[i]>4000 then
+			j=i
+			flag=1
+		end
+	end
+
+	#02 proximity triggered, go backward or forward depend on sensor, enable comm 
+	if flag==1  then	 
+	 call prox.comm.enable(1)
+    	 prox.comm.tx=locus 
+	 if  j&lt;5 then
+	 #rear sensor
+	 	motor.left.target=-100
+ 		motor.right.target=-100    
+	 else
+	 	motor.left.target=100
+ 		motor.right.target=100 
+	 end	
+    end
+    
+  	if prox.horizontal[j]&lt;2000 and prox.horizontal[j]>1000 then
+   		call prox.comm.enable(0)  								
+		callsub internalGeneMutation
+    end</node>
+
+
+</network>
