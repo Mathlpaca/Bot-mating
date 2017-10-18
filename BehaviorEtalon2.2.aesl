@@ -1,0 +1,122 @@
+<!DOCTYPE aesl-source>
+<network>
+
+
+<!--list of global events-->
+
+
+<!--list of constants-->
+
+
+<!--show keywords state-->
+<keywords flag="true"/>
+
+
+<!--node thymio-II-->
+<node nodeId="37938" name="thymio-II">#Final behavior code 2.2 (etalon)
+#Addition of random locus selection
+#NO natural selection
+#NO internal mutation of the color 
+
+
+var gene [4]=[300,0,100,100] #Gene n°1
+var myrand_n    #input
+var myrand_m    #input
+var myrand_res  #output
+var myrand_loc
+var tx_state  #internal state comm received
+var i
+var j
+var flag
+var locus=0
+var freeze=1
+
+
+#Arrays of color genotype definition
+var R [7]=[32,32,0,0,32,32,0]
+var G [7]=[0,0,32,0,32,32,32]
+var B [7]=[32,0,0,32,32,0,32]
+
+myrand_m=gene[0]             
+myrand_n=gene[1]            
+
+ 
+timer.period[0] = 4500
+
+#UTILITY FUNCTIONS
+
+#Random function
+sub myrand
+	call math.rand(myrand_res)
+	myrand_res = abs(myrand_res % (myrand_m+1 - myrand_n)) + myrand_n
+
+sub locusrand
+	call math.rand(myrand_loc)
+	myrand_loc = abs(myrand_loc % 7) #in a 0:7 range
+
+#Internal mutation routine 
+sub internalGeneMutation
+	callsub myrand
+	gene[2]=myrand_res
+	callsub myrand
+	gene[3]=myrand_res
+	motor.left.target=gene[2]
+	motor.right.target=gene[3]
+
+#External mutation routine 
+sub externalGeneMutation
+   	locus=prox.comm.rx	#reception
+    	call leds.top(R[locus],G[locus],B[locus])
+
+
+#launch timer event
+onevent timer0
+#Every time the gene mutation occurs, the movement changes
+	callsub internalGeneMutation
+	if  locus==0 then
+		callsub locusrand
+		locus = myrand_loc
+		call leds.top(R[locus],G[locus],B[locus])	
+	end
+
+#communication sensor event
+onevent prox.comm	
+#Mating	
+	callsub externalGeneMutation
+	
+ 	
+#proximity sensor event	
+onevent prox
+#01 a loop tests if the proximity value of a sensor is lower than 2cm C is the limitation of open sensor
+	flag=0
+	j=0
+	for i in 0:6 do 
+		if prox.horizontal[i]>4000 then
+			if j==0 then
+			 j=i
+			end
+			flag=1
+		end
+	end
+
+#02 if the value is lower than 2cm, then T. goes backward or forward depending on the sensor's location 
+	if flag==1  then	 
+	 call prox.comm.enable(1)
+	 
+	 if  j&lt;5 then
+	 #rear sensor
+	 	motor.left.target=-200
+ 		motor.right.target=200    
+	 else
+	 	motor.left.target=100
+ 		motor.right.target=100 
+	 end	
+    end
+    
+  	if prox.horizontal[j]&lt;2000 and prox.horizontal[j]>1000 then
+   		call prox.comm.enable(0)  								
+		callsub internalGeneMutation
+    end</node>
+
+
+</network>
