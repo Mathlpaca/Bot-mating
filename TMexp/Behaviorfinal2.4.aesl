@@ -1,0 +1,750 @@
+<!DOCTYPE aesl-source>
+<network>
+
+
+<!--list of global events-->
+
+
+<!--list of constants-->
+
+
+<!--show keywords state-->
+<keywords flag="true"/>
+
+
+<!--node thymio-II-->
+<node nodeId="1" name="thymio-II">#Final behavior code 2.4
+#Addition of random locus selection
+#WITH natural selection
+#NO internal mutation of the color 
+
+
+var gene [4]=[300,0,100,100] #Behavior gene
+var myrand_n=gene[1]   #input
+var myrand_m=gene[0]   #input
+var myrand_res  #output
+var myrand_loc
+var tx_state  #internal state comm received
+var i
+var j
+var flag
+var locus=0
+var freeze=1
+var flog
+
+
+#Arrays of color genotype definition
+var R [7]=[32,0,0,32,0,32,32]
+var G [7]=[0,32,0,32,32,0,32]
+var B [7]=[0,0,32,0,32,32,32]
+
+#Receptor threshold array
+var S [7]=[1,2,3,4,5,6,7]
+
+           
+timer.period[0] = 4500
+
+#UTILITY FUNCTIONS
+
+#Random function
+sub myrand
+	call math.rand(myrand_res)
+	myrand_res = abs(myrand_res % (myrand_m+1 - myrand_n)) + myrand_n
+
+sub locusrand
+	call math.rand(myrand_loc)
+	myrand_loc = abs(myrand_loc % 7) #in a 0:7 range
+
+#Internal mutation routine 
+sub internalGeneMutation
+	callsub myrand
+	gene[2]=myrand_res
+	callsub myrand
+	gene[3]=myrand_res
+	motor.left.target=gene[2]
+	motor.right.target=gene[3]
+
+#External mutation routine 
+sub externalGeneMutation
+   	locus=prox.comm.rx	#reception
+    	call leds.top(R[locus],G[locus],B[locus])
+    	
+#Avoidance routine
+sub avoidanceProcedure
+	callsub myrand
+	gene[2]=myrand_res
+	callsub myrand
+	gene[3]=myrand_res
+	motor.left.target=gene[2]
+	motor.right.target=gene[3]
+	
+#Start experiment
+onevent button.center
+	flog=1
+	
+	
+#Start color (reset color)	
+onevent button.forward
+	locus = locus+1
+	if locus>6 then
+		locus=0
+	end
+	call leds.top(R[locus],G[locus],B[locus])
+	
+	
+#Stop experiment
+onevent button.backward
+	motor.left.target=0
+	motor.right.target=0
+	flog=0
+
+		
+	
+		
+
+#launch timer event
+onevent timer0
+#Every time the gene mutation occurs, the movement changes, but only if the center button is enabled
+	if flog==1 then
+		callsub internalGeneMutation
+	else
+		motor.left.target=0
+		motor.right.target=0
+		
+	end
+	
+	
+
+#communication sensor event
+onevent prox.comm	
+#Mating	
+	callsub externalGeneMutation
+	
+ 	
+#proximity sensor event	
+onevent prox
+#01 a loop tests if the proximity value of a sensor is lower than 2cm S is the limitation of open sensor
+	flag=0
+	j=0
+	for i in 0:6 do 
+		if prox.horizontal[i]>4000 then
+			if j==0 then
+			 j=i
+			end
+			flag=1
+		end
+	end
+
+#02 if the value is lower than 2cm, then T. turns a little depending on the sensor's location 
+	if flag==1  then	 
+	 call prox.comm.enable(1)
+ 
+	 #genetic restriction to send locus
+    	 if j&lt;=S[locus] then 
+    	   prox.comm.tx=locus 
+	 end
+	 if  j&lt;5 then
+	 #rear sensor
+	 	motor.left.target=100
+ 		motor.right.target=-100    
+	 else
+	 	motor.left.target=100
+ 		motor.right.target=100 
+	 end	
+    end
+    
+  	if prox.horizontal[j]&lt;2000 and prox.horizontal[j]>1000 then
+   		call prox.comm.enable(0)  								
+		callsub internalGeneMutation
+    end</node>
+
+
+<!--node thymio-II-->
+<node nodeId="46479" name="thymio-II">#Final behavior code 2.3
+#Addition of random locus selection
+#WITH natural selection
+#NO internal mutation of the color 
+
+
+var gene [4]=[300,0,100,100] #Behavior gene
+var myrand_n=gene[1]   #input
+var myrand_m=gene[0]   #input
+var myrand_res  #output
+var myrand_loc
+var tx_state  #internal state comm received
+var i
+var j
+var flag
+var locus=0
+var freeze=1
+var flog
+
+
+#Arrays of color genotype definition
+var R [7]=[32,0,0,32,0,32,32]
+var G [7]=[0,32,0,32,32,0,32]
+var B [7]=[0,0,32,0,32,32,32]
+
+#Receptor threshold array
+var S [7]=[1,2,3,4,5,6,7]
+
+           
+timer.period[0] = 4500
+
+#UTILITY FUNCTIONS
+
+#Random function
+sub myrand
+	call math.rand(myrand_res)
+	myrand_res = abs(myrand_res % (myrand_m+1 - myrand_n)) + myrand_n
+
+sub locusrand
+	call math.rand(myrand_loc)
+	myrand_loc = abs(myrand_loc % 7) #in a 0:7 range
+
+#Internal mutation routine 
+sub internalGeneMutation
+	callsub myrand
+	gene[2]=myrand_res
+	callsub myrand
+	gene[3]=myrand_res
+	motor.left.target=gene[2]
+	motor.right.target=gene[3]
+
+#External mutation routine 
+sub externalGeneMutation
+   	locus=prox.comm.rx	#reception
+    	call leds.top(R[locus],G[locus],B[locus])
+    	
+#Avoidance routine
+sub avoidanceProcedure
+	callsub myrand
+	gene[2]=myrand_res
+	callsub myrand
+	gene[3]=myrand_res
+	motor.left.target=gene[2]
+	motor.right.target=gene[3]
+	
+#Start experiment
+onevent button.center
+	flog=1
+	
+	
+#Start color (reset color)	
+onevent button.forward
+	locus = locus+1
+	if locus>6 then
+		locus=0
+	end
+	call leds.top(R[locus],G[locus],B[locus])
+	
+	
+#Stop experiment
+onevent button.backward
+	motor.left.target=0
+	motor.right.target=0
+	flog=0
+
+		
+	
+		
+
+#launch timer event
+onevent timer0
+#Every time the gene mutation occurs, the movement changes, but only if the center button is enabled
+	if flog==1 then
+		callsub internalGeneMutation
+	else
+		motor.left.target=0
+		motor.right.target=0
+		
+	end
+	
+	
+
+#communication sensor event
+onevent prox.comm	
+#Mating	
+	callsub externalGeneMutation
+	
+ 	
+#proximity sensor event	
+onevent prox
+#01 a loop tests if the proximity value of a sensor is lower than 2cm S is the limitation of open sensor
+	flag=0
+	j=0
+	for i in 0:6 do 
+		if prox.horizontal[i]>4000 then
+			if j==0 then
+			 j=i
+			end
+			flag=1
+		end
+	end
+
+#02 if the value is lower than 2cm, then T. turns a little depending on the sensor's location 
+	if flag==1  then	 
+	 call prox.comm.enable(1)
+ 
+	 #genetic restriction to send locus
+    	 if j&lt;=S[locus] then 
+    	   prox.comm.tx=locus 
+	 end
+	 if  j&lt;5 then
+	 #rear sensor
+	 	motor.left.target=100
+ 		motor.right.target=-100    
+	 else
+	 	motor.left.target=100
+ 		motor.right.target=100 
+	 end	
+    end
+    
+  	if prox.horizontal[j]&lt;2000 and prox.horizontal[j]>1000 then
+   		call prox.comm.enable(0)  								
+		callsub internalGeneMutation
+    end</node>
+
+
+<!--node thymio-II-->
+<node nodeId="42347" name="thymio-II">#Final behavior code 2.3
+#Addition of random locus selection
+#WITH natural selection
+#NO internal mutation of the color 
+
+
+var gene [4]=[300,0,100,100] #Behavior gene
+var myrand_n=gene[1]   #input
+var myrand_m=gene[0]   #input
+var myrand_res  #output
+var myrand_loc
+var tx_state  #internal state comm received
+var i
+var j
+var flag
+var locus=0
+var freeze=1
+var flog
+
+
+#Arrays of color genotype definition
+var R [7]=[32,0,0,32,0,32,32]
+var G [7]=[0,32,0,32,32,0,32]
+var B [7]=[0,0,32,0,32,32,32]
+
+#Receptor threshold array
+var S [7]=[1,2,3,4,5,6,7]
+
+           
+timer.period[0] = 4500
+
+#UTILITY FUNCTIONS
+
+#Random function
+sub myrand
+	call math.rand(myrand_res)
+	myrand_res = abs(myrand_res % (myrand_m+1 - myrand_n)) + myrand_n
+
+sub locusrand
+	call math.rand(myrand_loc)
+	myrand_loc = abs(myrand_loc % 7) #in a 0:7 range
+
+#Internal mutation routine 
+sub internalGeneMutation
+	callsub myrand
+	gene[2]=myrand_res
+	callsub myrand
+	gene[3]=myrand_res
+	motor.left.target=gene[2]
+	motor.right.target=gene[3]
+
+#External mutation routine 
+sub externalGeneMutation
+   	locus=prox.comm.rx	#reception
+    	call leds.top(R[locus],G[locus],B[locus])
+    	
+#Avoidance routine
+sub avoidanceProcedure
+	callsub myrand
+	gene[2]=myrand_res
+	callsub myrand
+	gene[3]=myrand_res
+	motor.left.target=gene[2]
+	motor.right.target=gene[3]
+	
+#Start experiment
+onevent button.center
+	flog=1
+	
+	
+#Start color (reset color)	
+onevent button.forward
+	locus = locus+1
+	if locus>6 then
+		locus=0
+	end
+	call leds.top(R[locus],G[locus],B[locus])
+	
+	
+#Stop experiment
+onevent button.backward
+	motor.left.target=0
+	motor.right.target=0
+	flog=0
+
+		
+	
+		
+
+#launch timer event
+onevent timer0
+#Every time the gene mutation occurs, the movement changes, but only if the center button is enabled
+	if flog==1 then
+		callsub internalGeneMutation
+	else
+		motor.left.target=0
+		motor.right.target=0
+		
+	end
+	
+	
+
+#communication sensor event
+onevent prox.comm	
+#Mating	
+	callsub externalGeneMutation
+	
+ 	
+#proximity sensor event	
+onevent prox
+#01 a loop tests if the proximity value of a sensor is lower than 2cm S is the limitation of open sensor
+	flag=0
+	j=0
+	for i in 0:6 do 
+		if prox.horizontal[i]>4000 then
+			if j==0 then
+			 j=i
+			end
+			flag=1
+		end
+	end
+
+#02 if the value is lower than 2cm, then T. turns a little depending on the sensor's location 
+	if flag==1  then	 
+	 call prox.comm.enable(1)
+ 
+	 #genetic restriction to send locus
+    	 if j&lt;=S[locus] then 
+    	   prox.comm.tx=locus 
+	 end
+	 if  j&lt;5 then
+	 #rear sensor
+	 	motor.left.target=100
+ 		motor.right.target=-100    
+	 else
+	 	motor.left.target=100
+ 		motor.right.target=100 
+	 end	
+    end
+    
+  	if prox.horizontal[j]&lt;2000 and prox.horizontal[j]>1000 then
+   		call prox.comm.enable(0)  								
+		callsub internalGeneMutation
+    end</node>
+
+
+<!--node thymio-II-->
+<node nodeId="46479" name="thymio-II">#Final behavior code 2.3
+#Addition of random locus selection
+#WITH natural selection
+#NO internal mutation of the color 
+
+
+var gene [4]=[300,0,100,100] #Behavior gene
+var myrand_n=gene[1]   #input
+var myrand_m=gene[0]   #input
+var myrand_res  #output
+var myrand_loc
+var tx_state  #internal state comm received
+var i
+var j
+var flag
+var locus=0
+var freeze=1
+var flog
+
+
+#Arrays of color genotype definition
+var R [7]=[32,0,0,32,0,32,32]
+var G [7]=[0,32,0,32,32,0,32]
+var B [7]=[0,0,32,0,32,32,32]
+
+#Receptor threshold array
+var S [7]=[1,2,3,4,5,6,7]
+
+           
+timer.period[0] = 4500
+
+#UTILITY FUNCTIONS
+
+#Random function
+sub myrand
+	call math.rand(myrand_res)
+	myrand_res = abs(myrand_res % (myrand_m+1 - myrand_n)) + myrand_n
+
+sub locusrand
+	call math.rand(myrand_loc)
+	myrand_loc = abs(myrand_loc % 7) #in a 0:7 range
+
+#Internal mutation routine 
+sub internalGeneMutation
+	callsub myrand
+	gene[2]=myrand_res
+	callsub myrand
+	gene[3]=myrand_res
+	motor.left.target=gene[2]
+	motor.right.target=gene[3]
+
+#External mutation routine 
+sub externalGeneMutation
+   	locus=prox.comm.rx	#reception
+    	call leds.top(R[locus],G[locus],B[locus])
+    	
+#Avoidance routine
+sub avoidanceProcedure
+	callsub myrand
+	gene[2]=myrand_res
+	callsub myrand
+	gene[3]=myrand_res
+	motor.left.target=gene[2]
+	motor.right.target=gene[3]
+	
+#Start experiment
+onevent button.center
+	flog=1
+	
+	
+#Start color (reset color)	
+onevent button.forward
+	locus = locus+1
+	if locus>6 then
+		locus=0
+	end
+	call leds.top(R[locus],G[locus],B[locus])
+	
+	
+#Stop experiment
+onevent button.backward
+	motor.left.target=0
+	motor.right.target=0
+	flog=0
+
+		
+	
+		
+
+#launch timer event
+onevent timer0
+#Every time the gene mutation occurs, the movement changes, but only if the center button is enabled
+	if flog==1 then
+		callsub internalGeneMutation
+	else
+		motor.left.target=0
+		motor.right.target=0
+		
+	end
+	
+	
+
+#communication sensor event
+onevent prox.comm	
+#Mating	
+	callsub externalGeneMutation
+	
+ 	
+#proximity sensor event	
+onevent prox
+#01 a loop tests if the proximity value of a sensor is lower than 2cm S is the limitation of open sensor
+	flag=0
+	j=0
+	for i in 0:6 do 
+		if prox.horizontal[i]>4000 then
+			if j==0 then
+			 j=i
+			end
+			flag=1
+		end
+	end
+
+#02 if the value is lower than 2cm, then T. turns a little depending on the sensor's location 
+	if flag==1  then	 
+	 call prox.comm.enable(1)
+ 
+	 #genetic restriction to send locus
+    	 if j&lt;=S[locus] then 
+    	   prox.comm.tx=locus 
+	 end
+	 if  j&lt;5 then
+	 #rear sensor
+	 	motor.left.target=100
+ 		motor.right.target=-100    
+	 else
+	 	motor.left.target=100
+ 		motor.right.target=100 
+	 end	
+    end
+    
+  	if prox.horizontal[j]&lt;2000 and prox.horizontal[j]>1000 then
+   		call prox.comm.enable(0)  								
+		callsub internalGeneMutation
+    end</node>
+
+
+<!--node thymio-II-->
+<node nodeId="46479" name="thymio-II">#Final behavior code 2.4
+#Addition of random locus selection
+#WITH natural selection
+#NO internal mutation of the color 
+
+
+var gene [4]=[300,0,100,100] #Behavior gene
+var myrand_n=gene[1]   #input
+var myrand_m=gene[0]   #input
+var myrand_res  #output
+var myrand_loc
+var tx_state  #internal state comm received
+var i
+var j
+var flag
+var locus=0
+var freeze=1
+var flog
+
+
+#Arrays of color genotype definition
+var R [7]=[32,0,0,32,0,32,32]
+var G [7]=[0,32,0,32,32,0,32]
+var B [7]=[0,0,32,0,32,32,32]
+
+#Receptor threshold array
+var S [7]=[1,2,3,4,5,6,7]
+
+           
+timer.period[0] = 4500
+
+#UTILITY FUNCTIONS
+
+#Random function
+sub myrand
+	call math.rand(myrand_res)
+	myrand_res = abs(myrand_res % (myrand_m+1 - myrand_n)) + myrand_n
+
+sub locusrand
+	call math.rand(myrand_loc)
+	myrand_loc = abs(myrand_loc % 7) #in a 0:7 range
+
+#Internal mutation routine 
+sub internalGeneMutation
+	callsub myrand
+	gene[2]=myrand_res
+	callsub myrand
+	gene[3]=myrand_res
+	motor.left.target=gene[2]
+	motor.right.target=gene[3]
+
+#External mutation routine 
+sub externalGeneMutation
+   	locus=prox.comm.rx	#reception
+    	call leds.top(R[locus],G[locus],B[locus])
+    	
+#Avoidance routine
+sub avoidanceProcedure
+	callsub myrand
+	gene[2]=myrand_res
+	callsub myrand
+	gene[3]=myrand_res
+	motor.left.target=gene[2]
+	motor.right.target=gene[3]
+	
+#Start experiment
+onevent button.center
+	flog=1
+	
+	
+#Start color (reset color)	
+onevent button.forward
+	locus = locus+1
+	if locus>6 then
+		locus=0
+	end
+	call leds.top(R[locus],G[locus],B[locus])
+	
+	
+#Stop experiment
+onevent button.backward
+	motor.left.target=0
+	motor.right.target=0
+	flog=0
+
+		
+	
+		
+
+#launch timer event
+onevent timer0
+#Every time the gene mutation occurs, the movement changes, but only if the center button is enabled
+	if flog==1 then
+		callsub internalGeneMutation
+	else
+		motor.left.target=0
+		motor.right.target=0
+		
+	end
+	
+	
+
+#communication sensor event
+onevent prox.comm	
+#Mating	
+	callsub externalGeneMutation
+	
+ 	
+#proximity sensor event	
+onevent prox
+#01 a loop tests if the proximity value of a sensor is lower than 2cm S is the limitation of open sensor
+	flag=0
+	j=0
+	for i in 0:6 do 
+		if prox.horizontal[i]>4000 then
+			if j==0 then
+			 j=i
+			end
+			flag=1
+		end
+	end
+
+#02 if the value is lower than 2cm, then T. turns a little depending on the sensor's location 
+	if flag==1  then	 
+	 call prox.comm.enable(1)
+ 
+	 #genetic restriction to send locus
+    	 if j&lt;=S[locus] then 
+    	   prox.comm.tx=locus 
+	 end
+	 if  j&lt;5 then
+	 #rear sensor
+	 	motor.left.target=100
+ 		motor.right.target=-100    
+	 else
+	 	motor.left.target=100
+ 		motor.right.target=100 
+	 end	
+    end
+    
+  	if prox.horizontal[j]&lt;2000 and prox.horizontal[j]>1000 then
+   		call prox.comm.enable(0)  								
+		callsub internalGeneMutation
+    end</node>
+
+
+</network>
